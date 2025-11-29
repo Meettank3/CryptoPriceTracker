@@ -71,6 +71,12 @@ class _MyHomePageState extends State<MyHomePage> {
     var appState = context.watch<MyAppState>();
     var coinList = appState.cryptoPrices.keys.toList();
 
+    // for responsive sorting high to low
+    var screenHeight = MediaQuery.of(context).size.height;
+    var screenWidth = MediaQuery.of(context).size.width;
+    var isDesktopWidth = screenWidth > 600; // 600px is a standard "break point"
+    var isDesktopHeight = screenHeight > 800;
+    var isDesktop = isDesktopWidth && isDesktopHeight;
     coinList.sort(
       (a, b) {
       var priceA = appState.cryptoPrices[a]['usd'];
@@ -80,6 +86,7 @@ class _MyHomePageState extends State<MyHomePage> {
     );
 
     return Scaffold(
+      
       appBar: AppBar(
         title: Text('Crypto Price Tracker',style: style),
         centerTitle: true,
@@ -88,8 +95,7 @@ class _MyHomePageState extends State<MyHomePage> {
         actions: [
           IconButton(
             onPressed:(){
-              setState(() {
-              
+              setState(() {              
             });
             },
             icon: Icon(Icons.refresh),
@@ -97,62 +103,67 @@ class _MyHomePageState extends State<MyHomePage> {
         ],
       ),
       body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: theme.colorScheme.primaryContainer,
-                foregroundColor: theme.colorScheme.primary,
+        child: Padding(
+          padding: EdgeInsets.only(top: isDesktop ? screenHeight * 0.05 : screenHeight * 0.2),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.start,
+            children: [             
+              ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: theme.colorScheme.primaryContainer,
+                  foregroundColor: theme.colorScheme.primary,
+                ),
+                onPressed: () {
+                  appState.getPrice();
+                },
+                child: Text(" Get Bitcoin Price"),
               ),
-              onPressed: () {
-                appState.getPrice();
-              },
-              child: Text(" Get Bitcoin Price"),
-            ),
-            SizedBox(height: 20),
-            appState.isLoading 
-            ? CircularProgressIndicator() 
-            : appState.cryptoPrices.isNotEmpty 
-            ? SizedBox(
-                height: 300,
-                width: MediaQuery.of(context).size.width * 0.5,
-                child: 
-                  ListView.builder(   
-                    itemCount: coinList.length,         
-                    itemBuilder: (context, index){              
-                      String key = coinList[index];
-                      var value = appState.cryptoPrices[key];
-                      return Card(
-                        color: theme.colorScheme.primaryContainer,
-                        elevation: 4, // Adds a nice shadow
-                        margin: EdgeInsets.symmetric(horizontal: 10, vertical: 6), // Spacing between cards
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
-                        child: ListTile( 
-                          leading: CircleAvatar(
-                            backgroundColor: theme.colorScheme.secondary,                            
-                            child: Text(
-                              key[0].toUpperCase(), // Takes first letter 'b' -> 'B'
-                              style: TextStyle(color: Colors.white),
+              SizedBox(height: 20),
+              appState.isLoading 
+              ? CircularProgressIndicator() 
+              : appState.cryptoPrices.isNotEmpty 
+              ? Expanded(
+                child: Container(            
+                  margin: EdgeInsets.only(top: 10),
+                    width: isDesktop ? 600 : screenWidth * 0.9,
+                    child: 
+                      ListView.builder(   
+                        itemCount: coinList.length,         
+                        itemBuilder: (context, index){              
+                          String key = coinList[index];
+                          var value = appState.cryptoPrices[key];
+                          return Card(                        
+                            color: theme.colorScheme.primaryContainer,
+                            elevation: 4, // Adds a nice shadow
+                            margin: EdgeInsets.symmetric(horizontal: 10, vertical: 6), // Spacing between cards
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+                            child: ListTile( 
+                              leading: CircleAvatar(
+                                backgroundColor: theme.colorScheme.secondary,                            
+                                child: Text(
+                                  key[0].toUpperCase(), // Takes first letter 'b' -> 'B'
+                                  style: TextStyle(color: Colors.white),
+                                ),
+                              ),                     
+                              title: Text(key.toUpperCase(),
+                               style: TextStyle(fontWeight: FontWeight.bold)
+                               ,),
+                              trailing: Text("\$${value['usd']}",
+                               style: TextStyle(
+                                  fontSize: 18, 
+                                  fontWeight: FontWeight.bold,
+                                  color: theme.colorScheme.primary // Make money look green!
+                                ),
+                              ),
                             ),
-                          ),                     
-                          title: Text("${key.toUpperCase()}",
-                           style: TextStyle(fontWeight: FontWeight.bold)
-                           ,),
-                          trailing: Text("\$${value['usd']}",
-                           style: TextStyle(
-                              fontSize: 18, 
-                              fontWeight: FontWeight.bold,
-                              color: theme.colorScheme.primary // Make money look green!
-                            ),
-                          ),
-                        ),
-                      );
-                    }
-                    )              
+                          );
+                        }
+                        )              
+                  ),
               )
-            :Text("Click this Button to fetch Coin price", style: style,),
-          ],
+              :Text("Click this Button to fetch Coin price", style: style,),
+            ],
+          ),
         ),
       ),
     );
